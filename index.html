@@ -76,6 +76,7 @@
         main {
             width: 100%;
             max-width: 540px;
+            margin: 0 design auto;
             margin: 0 auto;
             padding: 10px 20px 20px;
         }
@@ -191,7 +192,7 @@
             50% { opacity: 1; }
         }
 
-        /* ПАНЕЛЬ ВВОДА (В точном стиле input-group реестра) */
+        /* ПАНЕЛЬ ВВОДА */
         .input-group {
             display: flex;
             align-items: center;
@@ -310,7 +311,7 @@
             padding: 0 4px;
         }
 
-        /* ИЗЯЩНАЯ КНОПКА КОНСЬЕРЖА (Nastya Support) */
+        /* ИЗЯЩНАЯ КНОПКА КОНСЬЕРЖА */
         .concierge-action-block {
             margin-top: 14px;
             padding-top: 14px;
@@ -403,8 +404,7 @@
                 <span class="section-subtitle">Пространство персонального куратора</span>
             </h2>
             
-            <div class="chat-space" id="chatSpace">
-                </div>
+            <div class="chat-space" id="chatSpace"></div>
 
             <div class="photo-preview-bar" id="photoPreviewBar" style="display: none;">
                 <img id="photoPreviewImg" src="" alt="Preview">
@@ -450,7 +450,7 @@
     <script>
         // Конфигурация эндпоинтов
         const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
-        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/SpringRenaissance"; // Укажи сюда прямую ссылку на Настю
+        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/SpringRenaissance"; 
 
         // DOM элементы
         const chatSpace = document.getElementById('chatSpace');
@@ -472,7 +472,6 @@
                 }, index * 120 + 100);
             });
             
-            // Инициализация стартового приветствия системы
             triggerCuratorGreeting();
         });
 
@@ -519,13 +518,23 @@
             const textContent = chatInputField.value.trim();
             if (!textContent && !currentActiveFile) return;
 
-            // Рендерим сообщение пользователя на экране
-            displayMessage(textContent, "user", currentActiveFile);
-            chatInputField.value = '';
+            const fileToSend = currentActiveFile;
 
-            // Передаем данные на Pipedream воркфлоу
-            transmitDataToBackend(textContent, currentActiveFile);
+            // Рендерим сообщение пользователя на экране сразу
+            displayMessage(textContent, "user", fileToSend);
+            chatInputField.value = '';
             clearImageSelection();
+
+            // Если есть файл, сначала переводим его в Base64, затем шлем чистый JSON
+            if (fileToSend) {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    await transmitDataToBackend(textContent, reader.result);
+                };
+                reader.readAsDataURL(fileToSend);
+            } else {
+                transmitDataToBackend(textContent, null);
+            }
         }
 
         // Функция рендера сообщений
@@ -536,7 +545,6 @@
             const card = document.createElement('div');
             card.className = 'msg-card';
 
-            // Если передано изображение от пользователя
             if (fileObj && side === 'user') {
                 const img = document.createElement('img');
                 img.src = URL.createObjectURL(fileObj);
@@ -552,14 +560,12 @@
             wrapper.appendChild(card);
             chatSpace.appendChild(wrapper);
             
-            // Прокрутка вниз
             chatSpace.scrollTop = chatSpace.scrollHeight;
             return card;
         }
 
-        // Функция отправки данных на Pipedream
-        async function transmitDataToBackend(text, file = null) {
-            // Создаем элегантный блок ожидания ответа
+        // Оптимизированная функция отправки данных на Pipedream (JSON-пакет)
+        async function transmitDataToBackend(text, base64Photo = null) {
             const typingWrapper = document.createElement('div');
             typingWrapper.className = 'msg-wrapper bot';
             const typingIndicator = document.createElement('div');
@@ -569,18 +575,23 @@
             chatSpace.appendChild(typingWrapper);
             chatSpace.scrollTop = chatSpace.scrollHeight;
 
-            // Формируем FormData для отправки на бэкенд
-            const transmissionForm = new FormData();
-            transmissionForm.append('message', text);
-            if (file) {
-                transmissionForm.append('photo', file);
-            }
+            const payload = {
+                message: text,
+                photo: base64Photo
+            };
 
             try {
                 const response = await fetch(PIPEDREAM_WORKFLOW_URL, {
                     method: 'POST',
-                    body: transmissionForm
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
 
                 const serverResult = await response.json();
                 typingWrapper.remove();
@@ -589,16 +600,13 @@
                     let textReply = serverResult.reply;
                     let shouldTriggerConciergeLink = false;
 
-                    // Отслеживаем триггер экстренного перевода на консьержа Настю
                     if (textReply.includes('[TRANSFER_TO_CONCIERGE]')) {
                         textReply = textReply.replace('[TRANSFER_TO_CONCIERGE]', '').trim();
                         shouldTriggerConciergeLink = true;
                     }
 
-                    // Отрисовываем ответ куратора
                     const outputCardElement = displayMessage(textReply, "bot");
 
-                    // Если триггер активен, встраиваем роскошную кнопку перехода в Telegram
                     if (shouldTriggerConciergeLink) {
                         const actionBlock = document.createElement('div');
                         actionBlock.className = 'concierge-action-block';
@@ -613,6 +621,8 @@
                         outputCardElement.appendChild(actionBlock);
                         chatSpace.scrollTop = chatSpace.scrollHeight;
                     }
+                } else {
+                    displayMessage("Куратор временно безмолвствует. Проверьте структуру ответа воркфлоу.", "bot");
                 }
             } catch (err) {
                 console.error("Transmission breakdown:", err);
