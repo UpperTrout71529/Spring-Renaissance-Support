@@ -380,7 +380,7 @@
             return card;
         }
 
-        // Оптимизированная функция отправки данных на Pipedream (JSON-пакет)
+        // Функция отправки данных на Pipedream
         async function transmitDataToBackend(text) {
             const typingWrapper = document.createElement('div');
             typingWrapper.className = 'msg-wrapper bot';
@@ -411,8 +411,9 @@
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                if (serverResult && serverResult.reply) {
-                    let textReply = serverResult.reply;
+                // ИСПРАВЛЕНО: Читаем ключ .text вместо .reply, соответствующий бэкенду Pipedream
+                if (serverResult && serverResult.text) {
+                    let textReply = serverResult.text;
                     let shouldTriggerConciergeLink = false;
 
                     if (textReply.includes('[TRANSFER_TO_CONCIERGE]')) {
@@ -436,10 +437,12 @@
                         outputCardElement.appendChild(actionBlock);
                         chatSpace.scrollTop = chatSpace.scrollHeight;
                     }
-              
+                }
             } catch (err) {
                 console.error("Transmission breakdown:", err);
-                typingWrapper.remove();
+                if (typingWrapper.parentNode) {
+                    typingWrapper.remove();
+                }
                 displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером Дома. Пожалуйста, повторите попытку позже.", "bot");
             }
         }
