@@ -315,10 +315,10 @@
         </section>
     </main>
 
-    <script>
+   <script>
         // Конфигурация эндпоинтов
         const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
-        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/springrenaissanceconcierge"; 
+        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/SpringRenaissance"; 
 
         // Переменная контекста (Память диалога для Gemini)
         let chatContext = [];
@@ -341,7 +341,10 @@
 
         // Функция приветствия
         function triggerCuratorGreeting() {
-            displayMessage("Приветствуем Вас в кураторском пространстве Spring Renaissance. Я Ваш персональный ассистент по эстетике и интерьерным решениям. Здесь Вы можете узнать подробнее о концепции дебютного релиза Le Vase Livre, уточнить параметры объектов или задать любые вопросы о философии бренда.", "bot");
+            const greeting = "Приветствуем Вас в кураторском пространстве Spring Renaissance. Я Ваш персональный ассистент по эстетике и интерьерным решениям. Здесь Вы можете узнать подробнее о концепции дебютного релиза Le Vase Livre, уточнить параметры объектов или задать любые вопросы о философии бренда.";
+            displayMessage(greeting, "bot");
+            // Добавляем приветствие в память, чтобы ИИ знал, с чего начался разговор
+            chatContext.push({ role: "model", text: greeting });
         }
 
         // Обработчики отправки
@@ -358,7 +361,7 @@
             displayMessage(textContent, "user");
             chatInputField.value = '';
 
-            // Отправляем чистый текстовый JSON на бэкенд
+            // Отправляем на бэкенд
             transmitDataToBackend(textContent);
         }
 
@@ -392,15 +395,14 @@
             typingWrapper.className = 'msg-wrapper bot';
             const typingIndicator = document.createElement('div');
             typingIndicator.className = 'curator-typing';
-            typingIndicator.innerText = "Ассистент создает ответ...";
+            typingIndicator.innerText = "Ассистент созидает ответ...";
             typingWrapper.appendChild(typingIndicator);
             chatSpace.appendChild(typingWrapper);
             chatSpace.scrollTop = chatSpace.scrollHeight;
 
-            // Передаем и текущий текст, и накопленную историю
             const payload = {
                 message: text,
-                history: chatContext
+                history: chatContext // Отправляем весь массив с историей
             };
 
             try {
@@ -419,25 +421,16 @@
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                // Универсальный извлекатель текста ответа
+                // Универсальный извлекатель текста ответа (добавлен .reply)
                 let textReply = "";
                 
-                // Берем сырые данные (проверяем разные возможные ключи Pipedream)
-                let rawData = serverResult.text || serverResult.response || serverResult;
-
-                // Если данные пришли в виде строки, проверяем, не спрятан ли внутри JSON
-                if (typeof rawData === 'string') {
-                    try {
-                        const parsedData = JSON.parse(rawData);
-                        textReply = parsedData.response || parsedData.text || rawData;
-                    } catch (e) {
-                        textReply = rawData;
-                    }
-                } else if (typeof rawData === 'object') {
-                    textReply = rawData.response || rawData.text || JSON.stringify(rawData);
+                if (typeof serverResult === 'string') {
+                    textReply = serverResult;
+                } else {
+                    // Ищем любой из возможных ключей
+                    textReply = serverResult.reply || serverResult.response || serverResult.text || JSON.stringify(serverResult);
                 }
 
-                // Рендерим итоговый чистый текст
                 if (textReply) {
                     // 2. Успешно получили ответ? Сохраняем его в память бота с ролью "model"
                     chatContext.push({ role: "model", text: textReply });
@@ -471,7 +464,11 @@
                 if (typingWrapper.parentNode) {
                     typingWrapper.remove();
                 }
-                displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером Дома. Пожалуйста, повторите попытку позже.", "bot");
+                displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером. Пожалуйста, повторите попытку позже.", "bot");
+                
+                // Если произошла ошибка, удаляем последний вопрос юзера из контекста,
+                // чтобы не сломать логику при повторной попытке
+                chatContext.pop(); 
             }
         }
     </script>
