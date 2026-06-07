@@ -421,13 +421,16 @@
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                // Универсальный извлекатель текста ответа (добавлен .reply)
+               // Универсальный извлекатель текста ответа
                 let textReply = "";
                 
                 if (typeof serverResult === 'string') {
                     textReply = serverResult;
+                } else if (Array.isArray(serverResult) && serverResult.length > 0 && serverResult[0].text) {
+                    // 1. Улавливаем формат массива (как на вашем скриншоте)
+                    textReply = serverResult[0].text;
                 } else {
-                    // Ищем любой из возможных ключей
+                    // 2. Ищем ключи в стандартном объекте
                     textReply = serverResult.reply || serverResult.response || serverResult.text || JSON.stringify(serverResult);
                 }
 
