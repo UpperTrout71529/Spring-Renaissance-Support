@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Spring Renaissance | Curator Chat</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #fcfaf7;
+            --text-color: #211f1c;
+            --accent-color: #bfa38a;
+            --muted-text: #8c857e;
+            --input-bg: #ffffff;
+            --input-border: #e8e5e0;
+            --button-bg: #211f1c;
+            --button-text: #ffffff;
+            --card-bg: #ffffff;
+            --luxury-tg-color: #5E4638;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 40px;
+        }
+
+        .cinematic-fade {
+            opacity: 0;
+            filter: blur(4px);
+            transform: translateY(20px);
+            transition: opacity 1.2s cubic-bezier(0.215, 0.610, 0.355, 1),
+                        filter 1.2s cubic-bezier(0.215, 0.610, 0.355, 1),
+                        transform 1.2s cubic-bezier(0.215, 0.610, 0.355, 1);
+        }
+
+        .cinematic-fade.is-visible {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+        }
+
+        header {
+            padding: 80px 20px 40px;
+            text-align: center;
+        }
+
+        .brand-logo-container {
+            display: inline-block;
+            max-width: 220px;
+            width: 100%;
+        }
+
+        .brand-logo-container img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        main {
+            width: 100%;
+            max-width: 540px;
+            margin: 0 auto;
+            padding: 10px 20px 20px;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            font-weight: 400;
+            color: var(--text-color);
+            margin-bottom: 28px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        
+        .section-subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.55rem;
+            font-weight: 300;
+            color: var(--muted-text);
+            display: block;
+            margin-top: 6px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* КОНТЕЙНЕР ЧАТА */
+        .chat-space {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 350px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 10px 4px;
+            margin-bottom: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-space::-webkit-scrollbar {
+            width: 3px;
+        }
+        .chat-space::-webkit-scrollbar-thumb {
+            background: var(--input-border);
+            border-radius: 10px;
+        }
+
+        /* СТИЛИ СООБЩЕНИЙ */
+        .msg-wrapper {
+            display: flex;
+            width: 100%;
+            animation: msgFadeIn 0.5s ease forwards;
+        }
+
+        @keyframes msgFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-wrapper.bot {
+            justify-content: flex-start;
+        }
+
+        .msg-wrapper.user {
+            justify-content: flex-end;
+        }
+
+        .msg-card {
+            max-width: 85%;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .msg-wrapper.bot .msg-card {
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-left: 3px solid var(--accent-color);
+            color: var(--text-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+        }
+
+        .msg-wrapper.user .msg-card {
+            background: var(--button-bg);
+            color: var(--button-text);
+            font-weight: 300;
+        }
+
+        .msg-card img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* КУРАТОРСКАЯ ЗАМЕТКА / ИНДИКАТОР НАБОРА */
+        .curator-typing {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            color: var(--muted-text);
+            font-size: 1.1rem;
+            padding-left: 10px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* ПАНЕЛЬ ВВОДА (В точном стиле input-group реестра) */
+        .input-group {
+            display: flex;
+            align-items: center;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 14px;
+            padding-right: 6px;
+            padding-left: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 15px rgba(191, 163, 138, 0.08);
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 16px 12px;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-color);
+            font-size: 15px;
+            font-weight: 300;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="text"]::placeholder {
+            color: #aba49c;
+            font-size: 0.9rem;
+        }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .icon-action-btn {
+            background: none;
+            border: none;
+            height: 44px;
+            width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            border-radius: 50%;
+        }
+
+        .icon-action-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-action-btn:active {
+            color: var(--accent-color);
+            transform: scale(0.95);
+        }
+
+        .icon-action-btn.active-attached {
+            color: var(--accent-color);
+            background-color: #faf6f0;
+        }
+
+        /* ПРЕДПРОСМОТР ФОТО */
+        .photo-preview-bar {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-bottom: none;
+            border-radius: 14px 14px 0 0;
+            padding: 12px 20px;
+            margin-bottom: -1px;
+            gap: 12px;
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .photo-preview-bar img {
+            height: 45px;
+            width: 45px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+        }
+
+        .preview-details {
+            flex: 1;
+            font-size: 0.75rem;
+            color: var(--muted-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .close-preview {
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            padding: 0 4px;
+        }
+
+        /* ИЗЯЩНАЯ КНОПКА КОНСЬЕРЖА (Nastya Support) */
+        .concierge-action-block {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #f7f4f0;
+            display: block;
+        }
+
+        .concierge-luxury-btn {
+            display: block;
+            background: var(--button-bg);
+            color: var(--button-text);
+            padding: 14px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 400;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-align: center;
+            transition: background 0.3s ease;
+        }
+
+        .concierge-luxury-btn:active {
+            background: var(--accent-color);
+        }
+
+        /* ФУТЕР */
+        footer {
+            margin-top: 120px; 
+            padding: 60px 20px 40px;
+            text-align: center;
+            border-top: 1px solid #f2ece6;
+        }
+
+        .tg-channel-block {
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        .tg-description {
+            font-size: 0.8rem;
+            color: var(--muted-text);
+            margin-bottom: 24px;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+
+        .tg-premium-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--luxury-tg-color);
+            color: var(--button-text);
+            text-decoration: none;
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(94, 70, 56, 0.15);
+            transition: all 0.3s cubic-bezier(0.215, 0.610, 0.355, 1);
+        }
+
+        .tg-premium-btn svg {
+            width: 15px;
+            height: 15px;
+            margin-right: 10px;
+            fill: currentColor;
+        }
+
+        .tg-premium-btn:active {
+            background-color: var(--accent-color);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-logo-container">
+            <img src="SR LOGO PNG.png" alt="Spring Renaissance Logo">
+        </div>
+    </header>
+
+    <main>
+        <section class="cinematic-fade" id="chat-section">
+            <h2 class="section-title">
+                Curator Ambiance Space
+                <span class="section-subtitle">Пространство персонального куратора</span>
+            </h2>
+            
+            <div class="chat-space" id="chatSpace">
+                </div>
+
+            <div class="photo-preview-bar" id="photoPreviewBar" style="display: none;">
+                <img id="photoPreviewImg" src="" alt="Preview">
+                <div class="preview-details">Изображение интерьера готово</div>
+                <div class="close-preview" id="closePreviewBtn">✕</div>
+            </div>
+
+            <div class="input-group">
+                <input type="file" id="mediaFileInput" accept="image/*" style="display: none;">
+                
+                <button class="icon-action-btn" id="attachBtn" aria-label="Прикрепить фото интерьера">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+
+                <div class="input-wrapper">
+                    <input type="text" id="chatInputField" placeholder="Задайте вопрос об объекте или отправьте фото интерьера..." autocomplete="off">
+                </div>
+
+                <button class="icon-action-btn" id="sendChatBtn" aria-label="Отправить">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cinematic-fade">
+        <div class="tg-channel-block">
+            <p class="tg-description">Присоединяйтесь к нашему закрытому журналу, чтобы исследовать новые эстетические дропы и философию предметов искусства.</p>
+            <a href="https://t.me/SpringRenaissance" target="_blank" class="tg-premium-btn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.62.15-.15 2.7-2.46 2.75-2.67.01-.03.01-.13-.05-.18-.06-.05-.14-.03-.2-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .34z"/>
+                </svg>
+                Spring Renaissance Channel
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // Конфигурация эндпоинтов
+        const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
+        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/SpringRenaissance"; // Укажи сюда прямую ссылку на Настю
+
+        // DOM элементы
+        const chatSpace = document.getElementById('chatSpace');
+        const chatInputField = document.getElementById('chatInputField');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+        const mediaFileInput = document.getElementById('mediaFileInput');
+        const attachBtn = document.getElementById('attachBtn');
+        const photoPreviewBar = document.getElementById('photoPreviewBar');
+        const photoPreviewImg = document.getElementById('photoPreviewImg');
+        const closePreviewBtn = document.getElementById('closePreviewBtn');
+
+        let currentActiveFile = null;
+
+        // Плавный запуск интерфейса
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.cinematic-fade').forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('is-visible');
+                }, index * 120 + 100);
+            });
+            
+            // Инициализация стартового приветствия системы
+            triggerCuratorGreeting();
+        });
+
+        // Функция приветствия
+        function triggerCuratorGreeting() {
+            displayMessage("Приветствуем Вас в пространстве Spring Renaissance. Я Ваш персональный интерьерный куратор. Если Вы хотите увидеть, как объект Le Vase Livre интегрируется в Вашу атмосферу, отправьте снимок Вашего интерьера, гостиной или рабочего кабинета.", "bot");
+        }
+
+        // Логика выбора фотографии
+        attachBtn.addEventListener('click', () => mediaFileInput.click());
+
+        mediaFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                currentActiveFile = file;
+                const fileReader = new FileReader();
+                fileReader.onload = (event) => {
+                    photoPreviewImg.src = event.target.result;
+                    photoPreviewBar.style.display = 'flex';
+                    attachBtn.classList.add('active-attached');
+                };
+                fileReader.readAsDataURL(file);
+            }
+        });
+
+        // Сброс выбранного изображения
+        closePreviewBtn.addEventListener('click', clearImageSelection);
+
+        function clearImageSelection() {
+            currentActiveFile = null;
+            mediaFileInput.value = '';
+            photoPreviewBar.style.display = 'none';
+            photoPreviewImg.src = '';
+            attachBtn.classList.remove('active-attached');
+        }
+
+        // Обработчики отправки
+        sendChatBtn.addEventListener('click', processUserMessage);
+        chatInputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') processUserMessage();
+        });
+
+        function processUserMessage() {
+            const textContent = chatInputField.value.trim();
+            if (!textContent && !currentActiveFile) return;
+
+            // Рендерим сообщение пользователя на экране
+            displayMessage(textContent, "user", currentActiveFile);
+            chatInputField.value = '';
+
+            // Передаем данные на Pipedream воркфлоу
+            transmitDataToBackend(textContent, currentActiveFile);
+            clearImageSelection();
+        }
+
+        // Функция рендера сообщений
+        function displayMessage(text, side, fileObj = null) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${side}`;
+
+            const card = document.createElement('div');
+            card.className = 'msg-card';
+
+            // Если передано изображение от пользователя
+            if (fileObj && side === 'user') {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(fileObj);
+                card.appendChild(img);
+            }
+
+            if (text) {
+                const textParagraph = document.createElement('p');
+                textParagraph.innerHTML = text.replace(/\n/g, '<br>');
+                card.appendChild(textParagraph);
+            }
+
+            wrapper.appendChild(card);
+            chatSpace.appendChild(wrapper);
+            
+            // Прокрутка вниз
+            chatSpace.scrollTop = chatSpace.scrollHeight;
+            return card;
+        }
+
+        // Функция отправки данных на Pipedream
+        async function transmitDataToBackend(text, file = null) {
+            // Создаем элегантный блок ожидания ответа
+            const typingWrapper = document.createElement('div');
+            typingWrapper.className = 'msg-wrapper bot';
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'curator-typing';
+            typingIndicator.innerText = "Spring Renaissance созидает ответ...";
+            typingWrapper.appendChild(typingIndicator);
+            chatSpace.appendChild(typingWrapper);
+            chatSpace.scrollTop = chatSpace.scrollHeight;
+
+            // Формируем FormData для отправки на бэкенд
+            const transmissionForm = new FormData();
+            transmissionForm.append('message', text);
+            if (file) {
+                transmissionForm.append('photo', file);
+            }
+
+            try {
+                const response = await fetch(PIPEDREAM_WORKFLOW_URL, {
+                    method: 'POST',
+                    body: transmissionForm
+                });
+
+                const serverResult = await response.json();
+                typingWrapper.remove();
+
+                if (serverResult && serverResult.reply) {
+                    let textReply = serverResult.reply;
+                    let shouldTriggerConciergeLink = false;
+
+                    // Отслеживаем триггер экстренного перевода на консьержа Настю
+                    if (textReply.includes('[TRANSFER_TO_CONCIERGE]')) {
+                        textReply = textReply.replace('[TRANSFER_TO_CONCIERGE]', '').trim();
+                        shouldTriggerConciergeLink = true;
+                    }
+
+                    // Отрисовываем ответ куратора
+                    const outputCardElement = displayMessage(textReply, "bot");
+
+                    // Если триггер активен, встраиваем роскошную кнопку перехода в Telegram
+                    if (shouldTriggerConciergeLink) {
+                        const actionBlock = document.createElement('div');
+                        actionBlock.className = 'concierge-action-block';
+                        
+                        const linkButton = document.createElement('a');
+                        linkButton.href = TELEGRAM_CONCIERGE_USERNAME;
+                        linkButton.target = "_blank";
+                        linkButton.className = 'concierge-luxury-btn';
+                        linkButton.innerText = "Связаться с Личным Консьержем";
+                        
+                        actionBlock.appendChild(linkButton);
+                        outputCardElement.appendChild(actionBlock);
+                        chatSpace.scrollTop = chatSpace.scrollHeight;
+                    }
+                }
+            } catch (err) {
+                console.error("Transmission breakdown:", err);
+                typingWrapper.remove();
+                displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером Дома. Пожалуйста, повторите попытку позже.", "bot");
+            }
+        }
+    </script>
+</body>
+</html>
