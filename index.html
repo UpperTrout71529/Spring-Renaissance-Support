@@ -35,8 +35,39 @@
             line-height: 1.6;
             letter-spacing: 0.5px;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
             padding-bottom: 40px;
+            position: relative;
+        }
+
+        /* КНОПКА ВОЗВРАТА НА САЙТ */
+        .back-to-site-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--muted-text);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-to-site-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .back-to-site-btn:hover {
+            color: var(--text-color);
         }
 
         .cinematic-fade {
@@ -152,6 +183,7 @@
             border-radius: 16px;
             font-size: 0.9rem;
             line-height: 1.6;
+            word-wrap: break-word;
         }
 
         .msg-wrapper.bot .msg-card {
@@ -255,12 +287,37 @@
             transform: scale(0.95);
         }
 
-        /* ИЗЯЩНАЯ КНОПКА КОНСЬЕРЖА */
+        /* КНОПКА СБРОСА СЕССИИ */
+        .reset-session-wrapper {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .reset-session-btn {
+            background: none;
+            border: none;
+            color: var(--muted-text);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 4px 12px;
+        }
+
+        .reset-session-btn:hover {
+            color: var(--accent-color);
+        }
+
+        /* ИЗЯЩНАЯ КНОПКА ДЕЙСТВИЙ (Консьерж, Оплата) */
         .concierge-action-block {
             margin-top: 14px;
             padding-top: 14px;
             border-top: 1px solid #f7f4f0;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .concierge-luxury-btn {
@@ -285,6 +342,11 @@
 </head>
 <body>
 
+    <a href="https://твой-сайт.ru" class="back-to-site-btn" aria-label="Вернуться на сайт">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <span>Назад</span>
+    </a>
+
     <header>
         <div class="brand-logo-container">
             <img src="SR-LOGO.webp" alt="Spring Renaissance Logo">
@@ -302,7 +364,7 @@
 
             <div class="input-group">
                 <div class="input-wrapper">
-                    <input type="text" id="chatInputField" placeholder="Задайте ассистенту вопрос о философии коллекции или концепции объектов..." autocomplete="off">
+                    <input type="text" id="chatInputField" placeholder="Задайте ассистенту вопрос о философии коллекции..." autocomplete="off">
                 </div>
 
                 <button class="icon-action-btn" id="sendChatBtn" aria-label="Отправить">
@@ -312,41 +374,96 @@
                     </svg>
                 </button>
             </div>
+
+            <div class="reset-session-wrapper">
+                <button id="resetSessionBtn" class="reset-session-btn">Начать новую сессию</button>
+            </div>
         </section>
     </main>
 
   <script>
-        // Конфигурация эндпоинтов
+        // === КОНФИГУРАЦИЯ БРЕНДА ===
         const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
-        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/springrenaissanceconcierge"; 
+        const STORAGE_KEY = "sr_curator_chat_history";
+        
+        // Словарь всех системных ссылок (вставляй свои реальные URL)
+        const BRAND_LINKS = {
+            '[TRANSFER_TO_CONCIERGE]': {
+                text: 'Связаться с Личным Консьержем',
+                url: 'https://t.me/springrenaissanceconcierge'
+            },
+            '[LINK_RESERVE_FORM]': {
+                text: 'Оформить частный резерв',
+                url: '#' 
+            },
+            '[LINK_SBP]': {
+                text: 'Оплатить через СБП',
+                url: '#' 
+            }
+        };
 
-        // Переменная контекста (Память диалога для Gemini)
+        // Память диалога для Gemini
         let chatContext = [];
 
         // DOM элементы
         const chatSpace = document.getElementById('chatSpace');
         const chatInputField = document.getElementById('chatInputField');
         const sendChatBtn = document.getElementById('sendChatBtn');
+        const resetSessionBtn = document.getElementById('resetSessionBtn');
 
-        // Плавный запуск интерфейса
+        // === ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА ===
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.cinematic-fade').forEach((el, index) => {
-                setTimeout(() => {
-                    el.classList.add('is-visible');
-                }, index * 120 + 100);
+                setTimeout(() => { el.classList.add('is-visible'); }, index * 120 + 100);
             });
             
+            // Проверка сохраненной сессии
+            const savedSession = localStorage.getItem(STORAGE_KEY);
+            if (savedSession) {
+                try {
+                    chatContext = JSON.parse(savedSession);
+                    if (chatContext.length > 0) {
+                        // Отрисовываем историю
+                        chatContext.forEach(msg => {
+                            if (msg.role === 'user') {
+                                displayMessage(msg.text, 'user');
+                            } else {
+                                renderBotMessageWithTags(msg.text);
+                            }
+                        });
+                    } else {
+                        triggerCuratorGreeting();
+                    }
+                } catch (e) {
+                    console.error("Ошибка чтения памяти сессии", e);
+                    triggerCuratorGreeting();
+                }
+            } else {
+                triggerCuratorGreeting();
+            }
+        });
+
+        // === УПРАВЛЕНИЕ СЕССИЕЙ ===
+        function saveSession() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(chatContext));
+        }
+
+        resetSessionBtn.addEventListener('click', () => {
+            chatContext = [];
+            localStorage.removeItem(STORAGE_KEY);
+            chatSpace.innerHTML = '';
             triggerCuratorGreeting();
         });
 
-        // Функция приветствия
+        // Функция стартового приветствия
         function triggerCuratorGreeting() {
             const greeting = "Приветствуем Вас в кураторском пространстве Spring Renaissance. Я Ваш персональный ассистент по эстетике и интерьерным решениям. Здесь Вы можете узнать подробнее о концепции дебютного релиза Le Vase Livre, уточнить параметры объектов или задать любые вопросы о философии бренда.";
-            displayMessage(greeting, "bot");
+            renderBotMessageWithTags(greeting);
             chatContext.push({ role: "model", text: greeting });
+            saveSession();
         }
 
-        // Обработчики отправки
+        // === ОБРАБОТКА ВВОДА ===
         sendChatBtn.addEventListener('click', processUserMessage);
         chatInputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') processUserMessage();
@@ -357,12 +474,14 @@
             if (!textContent) return;
 
             displayMessage(textContent, "user");
+            chatContext.push({ role: "user", text: textContent });
+            saveSession();
+            
             chatInputField.value = '';
-
             transmitDataToBackend(textContent);
         }
 
-        // Функция рендера сообщений
+        // Базовая функция вывода сообщения на экран
         function displayMessage(text, side) {
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${side}`;
@@ -378,15 +497,47 @@
 
             wrapper.appendChild(card);
             chatSpace.appendChild(wrapper);
-            
             chatSpace.scrollTop = chatSpace.scrollHeight;
             return card;
         }
 
-        // Функция отправки данных на Pipedream
-        async function transmitDataToBackend(text) {
-            chatContext.push({ role: "user", text: text });
+        // Умная отрисовка ответа ассистента с парсингом кнопок
+        function renderBotMessageWithTags(rawText) {
+            let displayText = rawText;
+            let activeButtons = [];
 
+            // Проверяем наличие тегов
+            Object.keys(BRAND_LINKS).forEach(tag => {
+                if (displayText.includes(tag)) {
+                    displayText = displayText.replace(tag, '').trim();
+                    activeButtons.push(BRAND_LINKS[tag]);
+                }
+            });
+
+            // Рисуем очищенный текст
+            const outputCardElement = displayMessage(displayText, "bot");
+
+            // Прикрепляем нужные кнопки, если теги были найдены
+            if (activeButtons.length > 0) {
+                const actionBlock = document.createElement('div');
+                actionBlock.className = 'concierge-action-block';
+                
+                activeButtons.forEach(btnConfig => {
+                    const linkButton = document.createElement('a');
+                    linkButton.href = btnConfig.url;
+                    linkButton.target = "_blank";
+                    linkButton.className = 'concierge-luxury-btn';
+                    linkButton.innerText = btnConfig.text;
+                    actionBlock.appendChild(linkButton);
+                });
+                
+                outputCardElement.appendChild(actionBlock);
+                chatSpace.scrollTop = chatSpace.scrollHeight;
+            }
+        }
+
+        // === СВЯЗЬ С СЕРВЕРОМ ===
+        async function transmitDataToBackend(text) {
             const typingWrapper = document.createElement('div');
             typingWrapper.className = 'msg-wrapper bot';
             const typingIndicator = document.createElement('div');
@@ -398,26 +549,22 @@
 
             const payload = {
                 message: text,
-                history: chatContext
+                history: chatContext.slice(0, -1) // Отправляем историю без текущего сообщения, оно идет в message
             };
 
             try {
                 const response = await fetch(PIPEDREAM_WORKFLOW_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Server returned status ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Status ${response.status}`);
 
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                // 1. Извлекаем сырые данные из ответа сервера
+                // Извлекаем сырые данные
                 let textReply = "";
                 if (typeof serverResult === 'string') {
                     textReply = serverResult;
@@ -425,54 +572,40 @@
                     textReply = serverResult.reply || serverResult.response || serverResult.text || JSON.stringify(serverResult);
                 }
 
-                // 2. ДЕКОДИРОВАНИЕ СТРОКИ JSON (Парсим внутренний JSON от Gemini при JSON Output: TRUE)
+                // Декодируем внутренний JSON, если есть
                 if (typeof textReply === 'string') {
                     const trimmed = textReply.trim();
                     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
                         try {
                             const innerJson = JSON.parse(trimmed);
-                            // Ищем чистый текст внутри объекта по приоритетным ключам
                             textReply = innerJson.text || innerJson.response || innerJson.reply || textReply;
                         } catch (e) {
-                            console.log("Строка похожа на JSON, но это обычный текст.");
+                            console.log("Обычный текст, парсинг пропущен.");
                         }
+                    } else if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                        try {
+                            const innerArray = JSON.parse(trimmed);
+                            if (innerArray.length > 0 && innerArray[0].text) {
+                                textReply = innerArray[0].text;
+                            }
+                        } catch (e) {}
                     }
                 }
 
                 if (textReply) {
+                    // Сохраняем оригинальный ответ в память (вместе с тегами)
                     chatContext.push({ role: "model", text: textReply });
-
-                    let shouldTriggerConciergeLink = false;
-
-                    if (textReply.includes('[TRANSFER_TO_CONCIERGE]')) {
-                        textReply = textReply.replace('[TRANSFER_TO_CONCIERGE]', '').trim();
-                        shouldTriggerConciergeLink = true;
-                    }
-
-                    const outputCardElement = displayMessage(textReply, "bot");
-
-                    if (shouldTriggerConciergeLink) {
-                        const actionBlock = document.createElement('div');
-                        actionBlock.className = 'concierge-action-block';
-                        
-                        const linkButton = document.createElement('a');
-                        linkButton.href = TELEGRAM_CONCIERGE_USERNAME;
-                        linkButton.target = "_blank";
-                        linkButton.className = 'concierge-luxury-btn';
-                        linkButton.innerText = "Связаться с Личным Консьержем";
-                        
-                        actionBlock.appendChild(linkButton);
-                        outputCardElement.appendChild(actionBlock);
-                        chatSpace.scrollTop = chatSpace.scrollHeight;
-                    }
+                    saveSession();
+                    // Рендерим на экран (вырезает теги и рисует кнопки)
+                    renderBotMessageWithTags(textReply);
                 }
             } catch (err) {
                 console.error("Transmission breakdown:", err);
-                if (typingWrapper.parentNode) {
-                    typingWrapper.remove();
-                }
+                if (typingWrapper.parentNode) typingWrapper.remove();
                 displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером. Пожалуйста, повторите попытку позже.", "bot");
+                // В случае ошибки удаляем запрос пользователя из памяти, чтобы не ломать контекст
                 chatContext.pop(); 
+                saveSession();
             }
         }
     </script>
