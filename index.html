@@ -295,14 +295,14 @@
         <section class="cinematic-fade" id="chat-section">
             <h2 class="section-title">
                 Curator Ambiance Space
-                <span class="section-subtitle">Пространство персонального куратора</span>
+                <span class="section-subtitle">Пространство персональной помощи</span>
             </h2>
             
             <div class="chat-space" id="chatSpace"></div>
 
             <div class="input-group">
                 <div class="input-wrapper">
-                    <input type="text" id="chatInputField" placeholder="Задайте куратору вопрос о философии коллекции или концепции объектов..." autocomplete="off">
+                    <input type="text" id="chatInputField" placeholder="Задайте ассистенту вопрос о философии коллекции или концепции объектов..." autocomplete="off">
                 </div>
 
                 <button class="icon-action-btn" id="sendChatBtn" aria-label="Отправить">
@@ -318,7 +318,7 @@
     <script>
         // Конфигурация эндпоинтов
         const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
-        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/SpringRenaissance"; 
+        const TELEGRAM_CONCIERGE_USERNAME = "https://t.me/springrenaissanceconcierge"; 
 
         // Переменная контекста (Память диалога для Gemini)
         let chatContext = [];
@@ -392,7 +392,7 @@
             typingWrapper.className = 'msg-wrapper bot';
             const typingIndicator = document.createElement('div');
             typingIndicator.className = 'curator-typing';
-            typingIndicator.innerText = "Spring Renaissance созидает ответ...";
+            typingIndicator.innerText = "Ассистент создает ответ...";
             typingWrapper.appendChild(typingIndicator);
             chatSpace.appendChild(typingWrapper);
             chatSpace.scrollTop = chatSpace.scrollHeight;
