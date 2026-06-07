@@ -380,7 +380,7 @@
             return card;
         }
 
-        // Функция отправки данных на Pipedream
+// Функция отправки данных на Pipedream
         async function transmitDataToBackend(text) {
             const typingWrapper = document.createElement('div');
             typingWrapper.className = 'msg-wrapper bot';
@@ -411,9 +411,29 @@
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                // ИСПРАВЛЕНО: Читаем ключ .text вместо .reply, соответствующий бэкенду Pipedream
-                if (serverResult && serverResult.text) {
-                    let textReply = serverResult.text;
+                // Универсальный извлекатель текста ответа
+                let textReply = "";
+                
+                // Берем сырые данные (проверяем разные возможные ключи Pipedream)
+                let rawData = serverResult.text || serverResult.response || serverResult;
+
+                // Если данные пришли в виде строки, проверяем, не спрятан ли внутри JSON
+                if (typeof rawData === 'string') {
+                    try {
+                        const parsedData = JSON.parse(rawData);
+                        // Достаем текст из ключа "response" (как на вашем скриншоте) или "text"
+                        textReply = parsedData.response || parsedData.text || rawData;
+                    } catch (e) {
+                        // Если это не JSON, а обычный текст, оставляем как есть
+                        textReply = rawData;
+                    }
+                } else if (typeof rawData === 'object') {
+                    // Если Pipedream сразу отдал готовый объект
+                    textReply = rawData.response || rawData.text || JSON.stringify(rawData);
+                }
+
+                // Рендерим итоговый чистый текст
+                if (textReply) {
                     let shouldTriggerConciergeLink = false;
 
                     if (textReply.includes('[TRANSFER_TO_CONCIERGE]')) {
