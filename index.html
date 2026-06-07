@@ -436,9 +436,7 @@
                         outputCardElement.appendChild(actionBlock);
                         chatSpace.scrollTop = chatSpace.scrollHeight;
                     }
-                } else {
-                    displayMessage("Куратор временно безмолвствует. Проверьте структуру ответа воркфлоу.", "bot");
-                }
+              
             } catch (err) {
                 console.error("Transmission breakdown:", err);
                 typingWrapper.remove();
