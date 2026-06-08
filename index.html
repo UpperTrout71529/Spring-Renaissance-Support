@@ -39,37 +39,6 @@
             position: relative;
         }
 
-        /* КНОПКА ВОЗВРАТА НА САЙТ */
-        .back-to-site-btn {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-            color: var(--muted-text);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: color 0.3s ease;
-            z-index: 100;
-        }
-
-        .back-to-site-btn svg {
-            width: 14px;
-            height: 14px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .back-to-site-btn:hover {
-            color: var(--text-color);
-        }
-
         .cinematic-fade {
             opacity: 0;
             filter: blur(4px);
@@ -86,7 +55,7 @@
         }
 
         header {
-            padding: 80px 20px 40px;
+            padding: 40px 20px 30px; /* Скорректировали верхний отступ после удаления кнопки */
             text-align: center;
         }
 
@@ -342,11 +311,6 @@
 </head>
 <body>
 
-    <a href="https://твой-сайт.ru" class="back-to-site-btn" aria-label="Вернуться на сайт">
-        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        <span>Назад</span>
-    </a>
-
     <header>
         <div class="brand-logo-container">
             <img src="SR-LOGO.webp" alt="Spring Renaissance Logo">
@@ -386,7 +350,6 @@
         const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
         const STORAGE_KEY = "sr_curator_chat_history";
         
-        // Словарь всех системных ссылок (вставляй свои реальные URL)
         const BRAND_LINKS = {
             '[TRANSFER_TO_CONCIERGE]': {
                 text: 'Связаться с Личным Консьержем',
@@ -402,28 +365,23 @@
             }
         };
 
-        // Память диалога для Gemini
         let chatContext = [];
 
-        // DOM элементы
         const chatSpace = document.getElementById('chatSpace');
         const chatInputField = document.getElementById('chatInputField');
         const sendChatBtn = document.getElementById('sendChatBtn');
         const resetSessionBtn = document.getElementById('resetSessionBtn');
 
-        // === ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА ===
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.cinematic-fade').forEach((el, index) => {
                 setTimeout(() => { el.classList.add('is-visible'); }, index * 120 + 100);
             });
             
-            // Проверка сохраненной сессии
             const savedSession = localStorage.getItem(STORAGE_KEY);
             if (savedSession) {
                 try {
                     chatContext = JSON.parse(savedSession);
                     if (chatContext.length > 0) {
-                        // Отрисовываем историю
                         chatContext.forEach(msg => {
                             if (msg.role === 'user') {
                                 displayMessage(msg.text, 'user');
@@ -443,7 +401,6 @@
             }
         });
 
-        // === УПРАВЛЕНИЕ СЕССИЕЙ ===
         function saveSession() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(chatContext));
         }
@@ -455,7 +412,6 @@
             triggerCuratorGreeting();
         });
 
-        // Функция стартового приветствия
         function triggerCuratorGreeting() {
             const greeting = "Приветствуем Вас в кураторском пространстве Spring Renaissance. Я Ваш персональный ассистент по эстетике и интерьерным решениям. Здесь Вы можете узнать подробнее о концепции дебютного релиза Le Vase Livre, уточнить параметры объектов или задать любые вопросы о философии бренда.";
             renderBotMessageWithTags(greeting);
@@ -463,7 +419,6 @@
             saveSession();
         }
 
-        // === ОБРАБОТКА ВВОДА ===
         sendChatBtn.addEventListener('click', processUserMessage);
         chatInputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') processUserMessage();
@@ -481,7 +436,6 @@
             transmitDataToBackend(textContent);
         }
 
-        // Базовая функция вывода сообщения на экран
         function displayMessage(text, side) {
             const wrapper = document.createElement('div');
             wrapper.className = `msg-wrapper ${side}`;
@@ -501,12 +455,10 @@
             return card;
         }
 
-        // Умная отрисовка ответа ассистента с парсингом кнопок
         function renderBotMessageWithTags(rawText) {
             let displayText = rawText;
             let activeButtons = [];
 
-            // Проверяем наличие тегов
             Object.keys(BRAND_LINKS).forEach(tag => {
                 if (displayText.includes(tag)) {
                     displayText = displayText.replace(tag, '').trim();
@@ -514,10 +466,8 @@
                 }
             });
 
-            // Рисуем очищенный текст
             const outputCardElement = displayMessage(displayText, "bot");
 
-            // Прикрепляем нужные кнопки, если теги были найдены
             if (activeButtons.length > 0) {
                 const actionBlock = document.createElement('div');
                 actionBlock.className = 'concierge-action-block';
@@ -536,7 +486,6 @@
             }
         }
 
-        // === СВЯЗЬ С СЕРВЕРОМ ===
         async function transmitDataToBackend(text) {
             const typingWrapper = document.createElement('div');
             typingWrapper.className = 'msg-wrapper bot';
@@ -549,7 +498,7 @@
 
             const payload = {
                 message: text,
-                history: chatContext.slice(0, -1) // Отправляем историю без текущего сообщения, оно идет в message
+                history: chatContext.slice(0, -1)
             };
 
             try {
@@ -564,7 +513,6 @@
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                // Извлекаем сырые данные
                 let textReply = "";
                 if (typeof serverResult === 'string') {
                     textReply = serverResult;
@@ -572,16 +520,13 @@
                     textReply = serverResult.reply || serverResult.response || serverResult.text || JSON.stringify(serverResult);
                 }
 
-                // Декодируем внутренний JSON, если есть
                 if (typeof textReply === 'string') {
                     const trimmed = textReply.trim();
                     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
                         try {
                             const innerJson = JSON.parse(trimmed);
                             textReply = innerJson.text || innerJson.response || innerJson.reply || textReply;
-                        } catch (e) {
-                            console.log("Обычный текст, парсинг пропущен.");
-                        }
+                        } catch (e) {}
                     } else if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
                         try {
                             const innerArray = JSON.parse(trimmed);
@@ -593,17 +538,14 @@
                 }
 
                 if (textReply) {
-                    // Сохраняем оригинальный ответ в память (вместе с тегами)
                     chatContext.push({ role: "model", text: textReply });
                     saveSession();
-                    // Рендерим на экран (вырезает теги и рисует кнопки)
                     renderBotMessageWithTags(textReply);
                 }
             } catch (err) {
                 console.error("Transmission breakdown:", err);
                 if (typingWrapper.parentNode) typingWrapper.remove();
                 displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером. Пожалуйста, повторите попытку позже.", "bot");
-                // В случае ошибки удаляем запрос пользователя из памяти, чтобы не ломать контекст
                 chatContext.pop(); 
                 saveSession();
             }
