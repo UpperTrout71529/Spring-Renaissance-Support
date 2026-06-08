@@ -55,8 +55,9 @@
         }
 
         header {
-            padding: 40px 20px 30px; /* Скорректировали верхний отступ после удаления кнопки */
+            padding: 40px 20px 45px; /* Слегка увеличили нижний отступ для баланса новой кнопки */
             text-align: center;
+            position: relative; /* Необходим для позиционирования новой кнопки */
         }
 
         .brand-logo-container {
@@ -70,6 +71,47 @@
             height: auto;
             object-fit: contain;
             display: block;
+        }
+
+        /* НОВАЯ КНОПКА НАЗАД (ПОД ЛОГОТИПОМ СЛЕВА СНИЗУ) */
+        .back-nav-btn {
+            position: absolute;
+            left: 20px;
+            bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: opacity 0.3s ease;
+            opacity: 0.85;
+        }
+
+        .back-nav-btn:active {
+            opacity: 1;
+        }
+
+        .back-nav-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            stroke-width: 1.2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* СКРЫТИЕ СТАРОЙ СТРЕЛОЧКИ ИЗ ВЕРХНЕГО ПРАВОГО УГЛА ТЕМЫ */
+        /* Ниже добавлены селекторы, которые заглушат стандартную стрелку Shopify на этой странице */
+        .theme-back-btn, 
+        .header-back-arrow, 
+        [class*="back-arrow"], 
+        [class*="return-link"] { 
+            display: none !important; 
         }
 
         main {
@@ -315,6 +357,14 @@
         <div class="brand-logo-container">
             <img src="SR-LOGO.webp" alt="Spring Renaissance Logo">
         </div>
+        
+        <a href="#" onclick="window.history.back(); return false;" class="back-nav-btn">
+            <svg viewBox="0 0 24 24">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Назад</span>
+        </a>
     </header>
 
     <main>
