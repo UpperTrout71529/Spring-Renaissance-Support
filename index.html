@@ -381,9 +381,9 @@
         </section>
     </main>
 
-  <script>
+    <script>
         // === КОНФИГУРАЦИЯ БРЕНДА ===
-        const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
+        const CLOUDFLARE_WORKER_URL = "https://spring-renaissance-support.sagradyanfelix.workers.dev";
         const STORAGE_KEY = "sr_curator_chat_history";
         
         // Словарь всех системных ссылок (вставляй свои реальные URL)
@@ -553,7 +553,7 @@
             };
 
             try {
-                const response = await fetch(PIPEDREAM_WORKFLOW_URL, {
+                const response = await fetch(CLOUDFLARE_WORKER_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -564,12 +564,14 @@
                 const serverResult = await response.json();
                 typingWrapper.remove();
 
-                // Извлекаем сырые данные
+                // Извлекаем сырые данные из ответа Воркера
                 let textReply = "";
-                if (typeof serverResult === 'string') {
+                if (serverResult && serverResult.reply) {
+                    textReply = serverResult.reply;
+                } else if (typeof serverResult === 'string') {
                     textReply = serverResult;
                 } else {
-                    textReply = serverResult.reply || serverResult.response || serverResult.text || JSON.stringify(serverResult);
+                    textReply = serverResult.response || serverResult.text || JSON.stringify(serverResult);
                 }
 
                 // Декодируем внутренний JSON, если есть
