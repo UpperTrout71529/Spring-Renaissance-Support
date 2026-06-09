@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Spring Renaissance | Curator Chat</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
@@ -27,6 +27,16 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Абсолютное бетонирование контейнера от скролла и прыжков */
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -34,9 +44,8 @@
             font-weight: 300;
             line-height: 1.6;
             letter-spacing: 0.5px;
-            overflow-x: hidden;
-            padding-bottom: 40px;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .cinematic-fade {
@@ -55,13 +64,14 @@
         }
 
         header {
-            padding: 40px 20px 30px; /* Скорректировали верхний отступ после удаления кнопки */
+            padding: 40px 20px 20px;
             text-align: center;
+            flex-shrink: 0;
         }
 
         .brand-logo-container {
             display: inline-block;
-            max-width: 220px;
+            max-width: 180px;
             width: 100%;
         }
 
@@ -76,22 +86,31 @@
             width: 100%;
             max-width: 540px;
             margin: 0 auto;
-            padding: 10px 20px 20px;
+            padding: 0 20px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Блокируем внешнее выталкивание */
         }
 
-        section {
-            margin-bottom: 40px;
+        section#chat-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+            margin-bottom: 0;
         }
 
         .section-title {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
+            font-size: 1.2rem;
             font-weight: 400;
             color: var(--text-color);
-            margin-bottom: 28px;
+            margin-bottom: 20px;
             letter-spacing: 2px;
             text-transform: uppercase;
             text-align: center;
+            flex-shrink: 0;
         }
         
         .section-subtitle {
@@ -100,22 +119,22 @@
             font-weight: 300;
             color: var(--muted-text);
             display: block;
-            margin-top: 6px;
+            margin-top: 4px;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        /* КОНТЕЙНЕР ЧАТА */
+        /* КОНТЕЙНЕР ЧАТА — ТЕПЕРЬ ОН АДАПТИВНО СЖИМАЕТСЯ */
         .chat-space {
             display: flex;
             flex-direction: column;
             gap: 24px;
-            min-height: 350px;
-            max-height: 60vh;
+            flex: 1; 
             overflow-y: auto;
             padding: 10px 4px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .chat-space::-webkit-scrollbar {
@@ -184,7 +203,7 @@
             50% { opacity: 1; }
         }
 
-        /* ПАНЕЛЬ ВВОДА */
+        /* ПАНЕЛЬ ВВОДА — НАМЕРТВО ПРИВЯЗАНА СНИЗУ */
         .input-group {
             display: flex;
             align-items: center;
@@ -196,6 +215,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
             transition: all 0.4s ease;
             position: relative;
+            flex-shrink: 0;
         }
 
         .input-group:focus-within {
@@ -215,7 +235,7 @@
             padding: 16px 0;
             font-family: 'Montserrat', sans-serif;
             color: var(--text-color);
-            font-size: 15px;
+            font-size: 16px; /* 16px предотвращает авто-зум на iOS Safari */
             font-weight: 300;
             outline: none;
             -webkit-appearance: none;
@@ -226,7 +246,6 @@
             font-size: 0.9rem;
         }
 
-        /* КНОПКИ УПРАВЛЕНИЯ */
         .icon-action-btn {
             background: none;
             border: none;
@@ -256,10 +275,10 @@
             transform: scale(0.95);
         }
 
-        /* КНОПКА СБРОСА СЕССИИ */
         .reset-session-wrapper {
             text-align: center;
-            margin-top: 18px;
+            margin-top: 12px;
+            flex-shrink: 0;
         }
 
         .reset-session-btn {
@@ -279,7 +298,6 @@
             color: var(--accent-color);
         }
 
-        /* ИЗЯЩНАЯ КНОПКА ДЕЙСТВИЙ (Консьерж, Оплата) */
         .concierge-action-block {
             margin-top: 14px;
             padding-top: 14px;
@@ -307,6 +325,11 @@
         .concierge-luxury-btn:active {
             background: var(--accent-color);
         }
+
+        @media (max-width: 480px) {
+            header { padding: 30px 20px 10px; }
+            .section-title { margin-bottom: 12px; font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
@@ -328,7 +351,7 @@
 
             <div class="input-group">
                 <div class="input-wrapper">
-                    <input type="text" id="chatInputField" placeholder="Задайте ассистенту вопрос о философии коллекции..." autocomplete="off">
+                    <input type="text" id="chatInputField" placeholder="Задайте вопрос о философии коллекции..." autocomplete="off">
                 </div>
 
                 <button class="icon-action-btn" id="sendChatBtn" aria-label="Отправить">
@@ -346,7 +369,6 @@
     </main>
 
     <script>
-        // === КОНФИГУРАЦИЯ БРЕНДА ===
         const PIPEDREAM_WORKFLOW_URL = "https://eoo4kypkn87pgfa.m.pipedream.net";
         const STORAGE_KEY = "sr_curator_chat_history";
         
@@ -451,7 +473,12 @@
 
             wrapper.appendChild(card);
             chatSpace.appendChild(wrapper);
-            chatSpace.scrollTop = chatSpace.scrollHeight;
+            
+            // Плавный фокус на последнее сообщение без прыжка вьюпорта
+            setTimeout(() => {
+                chatSpace.scrollTop = chatSpace.scrollHeight;
+            }, 50);
+            
             return card;
         }
 
@@ -531,7 +558,7 @@
                         try {
                             const innerArray = JSON.parse(trimmed);
                             if (innerArray.length > 0 && innerArray[0].text) {
-                                textReply = innerArray[0].text;
+                                innerArray[0].text;
                             }
                         } catch (e) {}
                     }
