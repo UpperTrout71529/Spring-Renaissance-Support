@@ -431,7 +431,7 @@
         });
 
         function triggerCuratorGreeting() {
-            const greeting = "Приветствуем Вас в кураторском пространстве Spring Renaissance. Я Ваш персональный ассистент по эстетике и интерьерным решениям. Здесь Вы можете узнать подробнее о концепции дебютного релиза Le Vase Livre, уточнить параметры объектов или задать любые вопросы о философии бренда.";
+            const greeting = "Welcome to the Spring Renaissance curatorial space. I am your personal assistant in aesthetics and interior solutions. Here you can learn more about the concept of the debut release of Le Passe Livre, specify the parameters of the objects, or ask any questions about the brand's philosophy.";
             renderBotMessageWithTags(greeting);
             chatContext.push({ role: "model", text: greeting });
             saveSession();
@@ -568,7 +568,7 @@
             } catch (err) {
                 console.error("Transmission breakdown:", err);
                 if (typingWrapper.parentNode) typingWrapper.remove();
-                displayMessage("Приносим глубокие извинения, возникли временные затруднения при связи с сервером. Пожалуйста, повторите попытку позже.", "bot");
+                displayMessage("We apologize for the inconvenience, there were temporary difficulties in communicating with the server. Please try again later.", "bot");
                 chatContext.pop(); 
                 saveSession();
             }
