@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -27,7 +27,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Абсолютное бетонирование контейнера от скролла и прыжков */
         html, body {
             height: 100%;
             width: 100%;
@@ -90,7 +89,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Блокируем внешнее выталкивание */
+            overflow: hidden;
         }
 
         section#chat-section {
@@ -124,7 +123,6 @@
             text-transform: uppercase;
         }
 
-        /* КОНТЕЙНЕР ЧАТА — ТЕПЕРЬ ОН АДАПТИВНО СЖИМАЕТСЯ */
         .chat-space {
             display: flex;
             flex-direction: column;
@@ -145,7 +143,6 @@
             border-radius: 10px;
         }
 
-        /* СТИЛИ СООБЩЕНИЙ */
         .msg-wrapper {
             display: flex;
             width: 100%;
@@ -188,7 +185,6 @@
             font-weight: 300;
         }
 
-        /* ИНДИКАТОР НАБОРА */
         .curator-typing {
             font-family: 'Cormorant Garamond', serif;
             font-style: italic;
@@ -203,7 +199,6 @@
             50% { opacity: 1; }
         }
 
-        /* ПАНЕЛЬ ВВОДА — НАМЕРТВО ПРИВЯЗАНА СНИЗУ */
         .input-group {
             display: flex;
             align-items: center;
@@ -235,7 +230,7 @@
             padding: 16px 0;
             font-family: 'Montserrat', sans-serif;
             color: var(--text-color);
-            font-size: 16px; /* 16px предотвращает авто-зум на iOS Safari */
+            font-size: 16px;
             font-weight: 300;
             outline: none;
             -webkit-appearance: none;
@@ -344,17 +339,17 @@
         <section class="cinematic-fade" id="chat-section">
             <h2 class="section-title">
                 Curator Ambiance Space
-                <span class="section-subtitle">Пространство персональной помощи</span>
+                <span class="section-subtitle">Bespoke Assistance Space</span>
             </h2>
             
             <div class="chat-space" id="chatSpace"></div>
 
             <div class="input-group">
                 <div class="input-wrapper">
-                    <input type="text" id="chatInputField" placeholder="Задайте вопрос о философии коллекции..." autocomplete="off">
+                    <input type="text" id="chatInputField" placeholder="Inquire about the collection philosophy..." autocomplete="off">
                 </div>
 
-                <button class="icon-action-btn" id="sendChatBtn" aria-label="Отправить">
+                <button class="icon-action-btn" id="sendChatBtn" aria-label="Send">
                     <svg viewBox="0 0 24 24">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                         <polyline points="12 5 19 12 12 19"></polyline>
@@ -363,7 +358,7 @@
             </div>
 
             <div class="reset-session-wrapper">
-                <button id="resetSessionBtn" class="reset-session-btn">Начать новую сессию</button>
+                <button id="resetSessionBtn" class="reset-session-btn">Start New Session</button>
             </div>
         </section>
     </main>
@@ -374,11 +369,11 @@
         
         const BRAND_LINKS = {
             '[TRANSFER_TO_CONCIERGE]': {
-                text: 'Связаться с Личным Консьержем',
+                text: 'Contact Personal Concierge',
                 url: 'https://t.me/srconcierge'
             },
             '[LINK_RESERVE_FORM]': {
-                text: 'Оформить частный резерв',
+                text: 'Request Private Reserve',
                 url: 'http://order.springrenaissance.ru/' 
             }
         };
@@ -411,7 +406,7 @@
                         triggerCuratorGreeting();
                     }
                 } catch (e) {
-                    console.error("Ошибка чтения памяти сессии", e);
+                    console.error("Session storage read error", e);
                     triggerCuratorGreeting();
                 }
             } else {
@@ -431,7 +426,7 @@
         });
 
         function triggerCuratorGreeting() {
-            const greeting = "Welcome to the Spring Renaissance curatorial space. I am your personal assistant in aesthetics and interior solutions. Here you can learn more about the concept of the debut release of Le Passe Livre, specify the parameters of the objects, or ask any questions about the brand's philosophy.";
+            const greeting = "Welcome to the Spring Renaissance curatorial space. I am your personal assistant in aesthetics and interior solutions. Here you can learn more about the concept of the debut release of Le Vase Livre, specify the parameters of the objects, or ask any questions about the brand's philosophy.";
             renderBotMessageWithTags(greeting);
             chatContext.push({ role: "model", text: greeting });
             saveSession();
@@ -470,7 +465,6 @@
             wrapper.appendChild(card);
             chatSpace.appendChild(wrapper);
             
-            // Плавный фокус на последнее сообщение без прыжка вьюпорта
             setTimeout(() => {
                 chatSpace.scrollTop = chatSpace.scrollHeight;
             }, 50);
@@ -514,7 +508,7 @@
             typingWrapper.className = 'msg-wrapper bot';
             const typingIndicator = document.createElement('div');
             typingIndicator.className = 'curator-typing';
-            typingIndicator.innerText = "Ассистент созидает ответ...";
+            typingIndicator.innerText = "Curator is crafting a response...";
             typingWrapper.appendChild(typingIndicator);
             chatSpace.appendChild(typingWrapper);
             chatSpace.scrollTop = chatSpace.scrollHeight;
